@@ -1,102 +1,117 @@
 # model-router
 
-model-router owns model selection and routing decisions for AGenNext.
+`model-router` is the model decision and execution service for AGenNext.
 
-## Decision
+It answers one simple question:
 
-model-router decides which certified model should be used for a task, request, agent, workflow, tenant, policy, cost target, latency target, quality requirement, or risk posture.
+> Given a task, which model/runtime should handle it, and how should it be called?
 
-It does not execute model calls directly.
+For now, `model-router` is intentionally a single lightweight service. There is no separate model gateway.
+
+## Responsibilities
+
+`model-router` owns:
+
+- selecting a model for a task
+- selecting a runtime or provider
+- applying simple routing rules
+- calling the selected model through an adapter
+- returning the model response or routing decision
+- recording basic routing metadata later
+
+## Not Responsibilities
+
+`model-router` does not own:
+
+- agent orchestration
+- capability execution
+- tool execution
+- skill definitions
+- UI flows
+- workflow state
+
+Those belong to other AGenNext components.
+
+## Relationship With Agent-Kernel
 
 ```txt
-model-repository
-  = candidate models, testing, build, eval, staging
-
-model-registry
-  = certified production-grade model catalog
+Agent-Kernel
+  = decides what capability should run
 
 model-router
-  = model selection and routing decision layer
-
-model-gateway
-  = model provider/runtime access and execution layer
+  = decides what model should be used
+  = calls that model/runtime through an adapter
 ```
 
-## Scope
-
-model-router owns:
-
-- model routing policies
-- task-to-model selection
-- fallback model selection
-- cost-aware routing
-- latency-aware routing
-- quality-aware routing
-- tenant-aware routing
-- policy-aware routing
-- safety/risk-aware routing
-- benchmark-aware routing
-- capability matching
-- routing decision records
-
-model-router does not own:
-
-- candidate model testing
-- production certification
-- model serving
-- provider credential custody
-- final platform authority
-- benchmark execution
-
-## Boundary
-
-| Component | Responsibility |
-|---|---|
-| model-router | Selects the best certified model for a task/context |
-| model-gateway | Executes calls to model providers/runtimes |
-| model-registry | Certified production-grade model catalog |
-| model-repository | Candidate model build/test/eval/staging repository |
-| Agent-Bench | Benchmark suites and result publishing |
-| Agent-Eval | Scoring/rubrics/quality metrics |
-| Agent-Policies | Routing constraints and governance policies |
-| Agent-Platform | Final authority for high-risk model routing decisions |
-
-## Routing inputs
-
-A routing decision may consider:
-
-- task type
-- modality
-- required capabilities
-- latency budget
-- cost budget
-- quality threshold
-- benchmark results
-- eval scores
-- safety profile
-- tenant policy
-- data sensitivity
-- provider availability
-- fallback requirements
-
-## Routing lifecycle
+Typical flow:
 
 ```txt
-request received
+Agent-Kernel
   ↓
-normalize task and policy context
+model-router
   ↓
-query model-registry for certified eligible models
-  ↓
-rank models by capability, quality, latency, cost, and risk
-  ↓
-select primary and fallback model
-  ↓
-model-gateway executes selected route
-  ↓
-record routing decision and outcome
+local model / remote model / custom runtime
 ```
 
-## Rule
+## Current Design
 
-Only certified models from model-registry should be eligible for production routing unless Agent-Platform explicitly approves an exception.
+The first version should stay small:
+
+```txt
+request
+  ↓
+normalize task
+  ↓
+choose model/runtime
+  ↓
+execute adapter
+  ↓
+return result
+```
+
+## Initial API Shape
+
+Example decision/execution request:
+
+```json
+{
+  "task": "plan-next-capability",
+  "input": "Analyze uploaded content",
+  "capabilities": ["analyze.echo"],
+  "constraints": {
+    "latency": "low",
+    "cost": "low"
+  }
+}
+```
+
+Example response:
+
+```json
+{
+  "model": "local-rule-engine",
+  "runtime": "builtin",
+  "output": {
+    "capability": "analyze.echo",
+    "reason": "Selected default analysis capability",
+    "input": "Analyze uploaded content"
+  }
+}
+```
+
+## Adapter Direction
+
+Adapters can be added later for:
+
+- built-in rule engine
+- local model runtimes
+- remote model APIs
+- custom in-house models
+
+The core API should remain stable even as adapters change.
+
+## Design Rule
+
+Keep `model-router` lightweight.
+
+Do not split it into more services until there is a real operational need.
