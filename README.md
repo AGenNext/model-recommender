@@ -1,46 +1,51 @@
 # model-router
 
-`model-router` is the model decision and execution service for AGenNext.
+`model-router` is the model selection and routing service for AGenNext.
 
 It answers one simple question:
 
-> Given a task, which model/runtime should handle it, and how should it be called?
+> Given a task, which model should be used, and where should the request be routed?
 
-For now, `model-router` is intentionally a single lightweight service. There is no separate model gateway.
+`model-router` does **not** run models directly. It routes to `Model-Runner`, which owns actual model execution.
 
 ## Responsibilities
 
 `model-router` owns:
 
 - selecting a model for a task
-- selecting a runtime or provider
-- applying simple routing rules
-- calling the selected model through an adapter
-- returning the model response or routing decision
-- recording basic routing metadata later
+- selecting the right runner endpoint
+- applying routing rules
+- applying fallback rules
+- considering latency, cost, quality, modality, and policy constraints
+- returning routing decisions
+- recording routing metadata later
 
 ## Not Responsibilities
 
 `model-router` does not own:
 
+- model process execution
+- model downloads
+- GPU/runtime lifecycle
+- token generation
 - agent orchestration
 - capability execution
 - tool execution
 - skill definitions
-- UI flows
-- workflow state
 
 Those belong to other AGenNext components.
 
-## Relationship With Agent-Kernel
+## Relationship With Agent-Kernel And Model-Runner
 
 ```txt
 Agent-Kernel
-  = decides what capability should run
+  = capability orchestration
 
 model-router
-  = decides what model should be used
-  = calls that model/runtime through an adapter
+  = model selection and routing
+
+Model-Runner
+  = model execution
 ```
 
 Typical flow:
@@ -50,7 +55,9 @@ Agent-Kernel
   ↓
 model-router
   ↓
-local model / remote model / custom runtime
+Model-Runner
+  ↓
+local model runtime
 ```
 
 ## Current Design
@@ -62,16 +69,16 @@ request
   ↓
 normalize task
   ↓
-choose model/runtime
+choose model
   ↓
-execute adapter
+route to Model-Runner
   ↓
-return result
+return result or decision
 ```
 
 ## Initial API Shape
 
-Example decision/execution request:
+Example request:
 
 ```json
 {
@@ -89,29 +96,19 @@ Example response:
 
 ```json
 {
-  "model": "local-rule-engine",
-  "runtime": "builtin",
+  "model": "tinyllama-1.1b",
+  "runner": "local",
+  "route": "http://localhost:4100/v1/generate",
   "output": {
     "capability": "analyze.echo",
-    "reason": "Selected default analysis capability",
+    "reason": "Selected default lightweight planner model",
     "input": "Analyze uploaded content"
   }
 }
 ```
 
-## Adapter Direction
-
-Adapters can be added later for:
-
-- built-in rule engine
-- local model runtimes
-- remote model APIs
-- custom in-house models
-
-The core API should remain stable even as adapters change.
-
 ## Design Rule
 
 Keep `model-router` lightweight.
 
-Do not split it into more services until there is a real operational need.
+Do not use external routing/proxy products unless there is a real need. AGenNext owns this layer.
