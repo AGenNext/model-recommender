@@ -1,19 +1,14 @@
 [project]
 name = "model-router"
 version = "0.1.0"
-description = "Lightweight model selection and routing service for AGenNext"
+description = "Dependency-free lightweight model selection and routing service for AGenNext"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = [
-    "fastapi>=0.115.0",
-    "uvicorn[standard]>=0.30.0",
-    "pydantic>=2.8.0",
-]
+dependencies = []
 
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0.0",
-    "httpx>=0.27.0",
 ]
 
 [tool.pytest.ini_options]
