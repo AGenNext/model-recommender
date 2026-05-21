@@ -1,0 +1,24 @@
+{
+  "models": [
+    {
+      "name": "tinyllama-1.1b",
+      "runner": "local",
+      "endpoint": "http://localhost:4100/v1/generate",
+      "cost": "low",
+      "latency": "low",
+      "quality": "basic",
+      "modalities": ["text"],
+      "capabilities": ["analyze.echo", "plan.basic"]
+    },
+    {
+      "name": "llama3-8b",
+      "runner": "local",
+      "endpoint": "http://localhost:4200/v1/generate",
+      "cost": "medium",
+      "latency": "medium",
+      "quality": "good",
+      "modalities": ["text"],
+      "capabilities": ["analyze.deep", "plan.advanced"]
+    }
+  ]
+}
