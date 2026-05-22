@@ -1,24 +1,30 @@
 {
   "models": [
     {
+      "id": "local/tinyllama-1.1b",
       "name": "tinyllama-1.1b",
-      "runner": "local",
-      "endpoint": "http://localhost:4100/v1/generate",
-      "cost": "low",
-      "latency": "low",
-      "quality": "basic",
+      "provider": "local",
+      "endpoint": "http://localhost:4100/v1/chat/completions",
+      "protocol": "openai-compatible",
       "modalities": ["text"],
-      "capabilities": ["analyze.echo", "plan.basic"]
+      "capabilities": ["chat", "simple", "plan.basic", "analyze.echo"],
+      "cost_rank": 1,
+      "latency_rank": 1,
+      "quality_rank": 1,
+      "context_tokens": 2048
     },
     {
+      "id": "local/llama3-8b",
       "name": "llama3-8b",
-      "runner": "local",
-      "endpoint": "http://localhost:4200/v1/generate",
-      "cost": "medium",
-      "latency": "medium",
-      "quality": "good",
+      "provider": "local",
+      "endpoint": "http://localhost:4200/v1/chat/completions",
+      "protocol": "openai-compatible",
       "modalities": ["text"],
-      "capabilities": ["analyze.deep", "plan.advanced"]
+      "capabilities": ["chat", "reasoning", "code", "plan.advanced", "analyze.deep"],
+      "cost_rank": 3,
+      "latency_rank": 3,
+      "quality_rank": 4,
+      "context_tokens": 8192
     }
   ]
 }
