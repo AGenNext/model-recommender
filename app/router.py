@@ -1,13 +1,20 @@
 import json
+import os
 from pathlib import Path
 
 from app.models import RouteRequest
 
 
-REGISTRY_PATH = Path("config/models.json")
+REGISTRY_PATH = Path(
+    os.getenv("MODEL_ROUTER_REGISTRY", "config/models.json")
+)
 
 
 class NoModelAvailable(Exception):
+    pass
+
+
+class InvalidModelRequested(Exception):
     pass
 
 
@@ -16,39 +23,38 @@ def load_registry() -> dict:
         return json.load(f)
 
 
-PRIORITY = {
-    "low": 1,
-    "medium": 2,
-    "high": 3,
-    "basic": 1,
-    "good": 2,
-    "best": 3,
-}
-
-
 def score_model(model: dict, request: RouteRequest) -> int:
     score = 0
 
     constraints = request.constraints
 
-    if constraints.cost and model.get("cost") == constraints.cost:
-        score += 3
+    score -= model.get("cost_rank", 100)
+    score -= model.get("latency_rank", 100)
+    score += model.get("quality_rank", 0)
 
-    if constraints.latency and model.get("latency") == constraints.latency:
-        score += 3
+    if constraints.provider and model.get("provider") == constraints.provider:
+        score += 20
 
-    if constraints.quality and model.get("quality") == constraints.quality:
-        score += 3
+    if constraints.protocol and model.get("protocol") == constraints.protocol:
+        score += 10
 
     for capability in request.capabilities:
         if capability in model.get("capabilities", []):
-            score += 5
+            score += 25
 
     return score
 
 
-def choose_model(request: RouteRequest) -> dict:
+def choose_model(request: RouteRequest, requested_model: str | None = None) -> dict:
     registry = load_registry()
+
+    if requested_model:
+        for model in registry["models"]:
+            if model["id"] == requested_model:
+                return model
+
+        raise InvalidModelRequested(requested_model)
+
     candidates = []
 
     for model in registry["models"]:
