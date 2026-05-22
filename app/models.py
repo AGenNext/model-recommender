@@ -3,29 +3,42 @@ from typing import Any
 
 
 @dataclass
-class Constraints:
-    latency: str | None = None
-    cost: str | None = None
-    quality: str | None = None
-    provider: str | None = None
-    runner: str | None = None
-    protocol: str | None = None
+class Environment:
+    side: str | None = None
+    data_sensitivity: str | None = None
 
 
 @dataclass
-class RouteRequest:
-    task: str
-    input: str
-    capabilities: list[str] = field(default_factory=list)
+class Constraints:
+    provider: str | None = None
+    protocol: str | None = None
+    side: str | None = None
+    max_cost_usd: float | None = None
+    min_context_tokens: int | None = None
+    prefer_local: bool = False
+
+
+@dataclass
+class AgentContext:
+    agent: str = "unknown"
+    task: str = "general"
+    input: str = ""
     modality: str = "text"
+    capabilities: list[str] = field(default_factory=list)
+    input_tokens: int = 0
+    output_tokens: int = 0
+    environment: Environment = field(default_factory=Environment)
     constraints: Constraints = field(default_factory=Constraints)
 
 
 @dataclass
-class RouteDecision:
+class Recommendation:
     model: str
     provider: str
-    runner: str
+    side: str
     route: str
     protocol: str
-    output: dict[str, Any]
+    estimated_cost_usd: float
+    score: int
+    reason: str
+    metadata: dict[str, Any] = field(default_factory=dict)
