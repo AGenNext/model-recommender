@@ -1,0 +1,42 @@
+{
+  "policy_version": "v1",
+  "environment_mode": "test",
+  "decision_mode": "single_best_model",
+  "deterministic": true,
+  "weights": {
+    "capability_match": 40,
+    "observed_success_rate": 30,
+    "quality_score": 20,
+    "efficiency_score": 20,
+    "local_preference": 10,
+    "protocol_match": 5,
+    "provider_match": 5
+  },
+  "penalties": {
+    "missing_required_capability": 1000,
+    "insufficient_context": 1000,
+    "exceeds_max_cost": 1000,
+    "cost_rank": 3,
+    "latency_rank": 2
+  },
+  "tie_breakers": [
+    "lowest_estimated_cost_usd",
+    "lowest_latency_rank",
+    "highest_quality_score",
+    "lexicographic_model_id"
+  ],
+  "modes": {
+    "test": {
+      "allow_unknown_metrics": true,
+      "default_success_rate": 0.5,
+      "default_quality_score": 0.5,
+      "default_efficiency_score": 0.5
+    },
+    "production": {
+      "allow_unknown_metrics": false,
+      "default_success_rate": 0.0,
+      "default_quality_score": 0.0,
+      "default_efficiency_score": 0.0
+    }
+  }
+}
